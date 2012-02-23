@@ -85,10 +85,35 @@ int _generateMoves(
 		int wildCount,
 		int x,
 		int y,
+		int dx,
+		int dy,
 		char *tiles,
 		int tileIndex,
 		int dawgIndex)
 {
+	// $
+	int index = getDawgRecord(dawg, dawgIndex, SENTINEL);
+	if (index != FAILED) {
+		Move *move = moves[moveIndex++];
+		move->index = y * board->width + x;
+		move->direction = direction;
+		strcpy(move->tiles, tiles); // TODO: null terminate first
+	}
+	// tiles
+	for (int i = 0; i < 26; i++) {
+		if (tileCounts[i]) {
+			char letter = 'a' + i;
+			int index = getDawgRecord(dawg, dawgIndex, letter);
+			if (index != FAILED) {
+				tileCounts[i]--;
+				tiles[tileIndex] = letter;
+				moveIndex = _generateMoves(moves, maxMoves, moveIndex, board, tileCounts, wildCount, x + dx, y + dy, dx, dy, tiles, tileIndex + 1, index);
+				tileCounts[i]++;
+			}
+		}
+	}
+	// wild
+	return moveIndex;
 }
 
 int generateMoves(
@@ -104,6 +129,8 @@ int generateMoves(
 			for (int direction = 1; direction <= 2; direction++) {
 				int dx = direction == HORIZONTAL ? 1 : 0;
 				int dy = direction == HORIZONTAL ? 0 : 1;
+				char tiles[16];
+				result = _generateMoves(moves, maxMoves, result, board, tileCounts, wildCount, x, y, dx, dy, tiles, 0, 0);
 			}
 		}
 	}
