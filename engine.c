@@ -57,6 +57,95 @@ int checkDawg(DawgRecord* records, char* letters, int length) {
     return 1;
 }
 
+
+#define EMPTY '.'
+#define INDEX(board, x, y) (y * board->width + x)
+#define IS_EMPTY(board, x, y) (board->tiles[INDEX(board, x, y)] == EMPTY)
+
+typedef struct {
+	int width;
+	int height;
+	int start;
+	int *letterMultiplier;
+	int *wordMultiplier;
+	int *tileValue;
+	char *tiles;
+} Board;
+
+typedef struct {
+	int x;
+	int y;
+	int direction;
+	int score;
+	char tiles[16];
+} Move;
+
+int isAdjacent(Board *board, int x, int y) {
+	int index = INDEX(board, x, y);
+	if (index == board->start) {
+		return 1;
+	}
+	if (x > 0 && !IS_EMPTY(board, x - 1, y)) {
+		return 1;
+	}
+	if (y > 0 && !IS_EMPTY(board, x, y - 1)) {
+		return 1;
+	}
+	if (x < board->width - 2 && !IS_EMPTY(board, x + 1, y)) {
+		return 1;
+	}
+	if (y < board->height - 2 && !IS_EMPTY(board, x, y + 1)) {
+		return 1;
+	}
+	return 0;
+}
+
+void getHorizontalStarts(Board *board, int tileCount, int *result) {
+	for (int y = 0; y < board->height; y++) {
+		for (int x = 0; x < board->width; x++) {
+			int index = INDEX(board, x, y);
+			result[index] = 0;
+			if (x > 0 && !IS_EMPTY(board, x - 1, y)) {
+				continue;
+			}
+			if (IS_EMPTY(board, x, y)) {
+				for (int i = 0; i < tileCount; i++) {
+					if (x + i < board->width && isAdjacent(board, x + i, y)) {
+						result[index] = i + 1;
+						break;
+					}
+				}
+			}
+			else {
+				result[index] = 1;
+			}
+		}
+	}
+}
+
+void getVerticalStarts(Board *board, int tileCount, int *result) {
+	for (int y = 0; y < board->height; y++) {
+		for (int x = 0; x < board->width; x++) {
+			int index = INDEX(board, x, y);
+			result[index] = 0;
+			if (y > 0 && !IS_EMPTY(board, x, y - 1)) {
+				continue;
+			}
+			if (IS_EMPTY(board, x, y)) {
+				for (int i = 0; i < tileCount; i++) {
+					if (y + i < board->height && isAdjacent(board, x, y + i)) {
+						result[index] = i + 1;
+						break;
+					}
+				}
+			}
+			else {
+				result[index] = 1;
+			}
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
     init("files/twl.dawg");
     uninit();
