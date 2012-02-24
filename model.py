@@ -124,6 +124,9 @@ class Move(object):
         self.tiles = tiles
         self.score = score
         self.words = words
+    def __str__(self):
+        words = ', '.join(self.words)
+        return '%d %s "%s" [%s]' % (self.score, self.vector, self.tiles, words)
     @property
     def vector(self):
         row = '%02d' % (self.y + 1)
@@ -151,8 +154,6 @@ class Board(object):
         return '\n'.join(rows)
     def index(self, x, y):
         return y * self.width + x
-    def xy(self, index):
-        return (index % self.width, index / self.width)
     def get_tile(self, x, y):
         return self.tiles[self.index(x, y)]
     def is_empty(self, x, y):
@@ -301,6 +302,11 @@ class Rack(object):
             self.tiles.append(bag.pop())
     def empty(self):
         return not self.tiles
+    def do_move(self, move):
+        for tile in move.tiles:
+            if tile != SKIP:
+                key, _ = key_letter(tile)
+                self.tiles.remove(key)
 
 class Player(object):
     def __init__(self, name):
@@ -431,14 +437,11 @@ if __name__ == '__main__':
         if not moves:
             break
         move = moves[0]
-        print '%s "%s" [%s]' % (move.vector, move.tiles, ', '.join(move.words))
+        print move
         board.do_move(move)
-        for tile in move.tiles:
-            if tile != SKIP:
-                key, letter = key_letter(tile)
-                rack.tiles.remove(key)
+        rack.do_move(move)
+        rack.fill(bag)
         print board
         print '%d + %d = %d' % (score, move.score, score + move.score)
         print
-        rack.fill(bag)
         score += move.score
