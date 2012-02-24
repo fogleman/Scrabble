@@ -5,8 +5,9 @@ HORIZONTAL = 1
 VERTICAL = 2
 
 # Board Constants
-EMPTY = ' '
+EMPTY = '.'
 WILD = '?'
+SKIP = '-'
 WIDTH = 15
 HEIGHT = 15
 START = 112
@@ -119,6 +120,12 @@ class Board(object):
         self.letter_multiplier = LETTER_MULTIPLIER
         self.word_multiplier = WORD_MULTIPLIER
         self.tiles = [EMPTY] * (WIDTH * HEIGHT)
+    def index(self, x, y):
+        return y * self.width + x
+    def xy(self, index):
+        return (index % self.width, index / self.width)
+    def get_tile(self, x, y):
+        return self.tiles[self.index(x, y)]
 
 class Bag(object):
     def __init__(self):
@@ -142,10 +149,14 @@ class Player(object):
         self.score = 0
         self.rack = Rack()
 
+class Move(object):
+    def __init__(self):
+        pass
+
 class Game(object):
     def __init__(self):
         self.board = Board()
         self.bag = Bag()
-        self.players = [Player('Player %d' % (i + 1)) for i in range(2)]
+        self.players = [Player('Player %d' % (i + 1)) for i in xrange(2)]
         for player in self.players:
             player.rack.fill(self.bag)
