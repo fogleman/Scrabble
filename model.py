@@ -60,63 +60,17 @@ WORD_MULTIPLIER = [
 ]
 
 TILE_FREQUENCY = {
-    'a': 9,
-    'b': 2,
-    'c': 2,
-    'd': 4,
-    'e': 12,
-    'f': 2,
-    'g': 3,
-    'h': 2,
-    'i': 9,
-    'j': 1,
-    'k': 1,
-    'l': 4,
-    'm': 2,
-    'n': 6,
-    'o': 8,
-    'p': 2,
-    'q': 1,
-    'r': 6,
-    's': 4,
-    't': 6,
-    'u': 4,
-    'v': 2,
-    'w': 2,
-    'x': 1,
-    'y': 2,
-    'z': 1,
-    WILD: 2,
+    'a': 9, 'b': 2, 'c': 2, 'd': 4, 'e':12, 'f': 2, 'g': 3, 'h': 2,
+    'i': 9, 'j': 1, 'k': 1, 'l': 4, 'm': 2, 'n': 6, 'o': 8, 'p': 2,
+    'q': 1, 'r': 6, 's': 4, 't': 6, 'u': 4, 'v': 2, 'w': 2, 'x': 1,
+    'y': 2, 'z': 1, WILD: 2,
 }
 
 TILE_VALUE = {
-    'a': 1,
-    'b': 3,
-    'c': 3,
-    'd': 2,
-    'e': 1,
-    'f': 4,
-    'g': 2,
-    'h': 4,
-    'i': 1,
-    'j': 8,
-    'k': 5,
-    'l': 1,
-    'm': 3,
-    'n': 1,
-    'o': 1,
-    'p': 3,
-    'q': 10,
-    'r': 1,
-    's': 1,
-    't': 1,
-    'u': 1,
-    'v': 4,
-    'w': 4,
-    'x': 8,
-    'y': 4,
-    'z': 10,
-    WILD: 0,
+    'a': 1, 'b': 3, 'c': 3, 'd': 2, 'e': 1, 'f': 4, 'g': 2, 'h': 4,
+    'i': 1, 'j': 8, 'k': 5, 'l': 1, 'm': 3, 'n': 1, 'o': 1, 'p': 3,
+    'q':10, 'r': 1, 's': 1, 't': 1, 'u': 1, 'v': 4, 'w': 4, 'x': 8,
+    'y': 4, 'z':10, WILD: 0,
 }
 
 # Functions
@@ -178,6 +132,7 @@ class Board(object):
         self.start = START
         self.letter_multiplier = LETTER_MULTIPLIER
         self.word_multiplier = WORD_MULTIPLIER
+        self.tile_value = TILE_VALUE
         self.tiles = [EMPTY] * (WIDTH * HEIGHT)
     def __str__(self):
         width = self.width
@@ -192,6 +147,20 @@ class Board(object):
         return (index % self.width, index / self.width)
     def get_tile(self, x, y):
         return self.tiles[self.index(x, y)]
+    def is_empty(self, x, y):
+        return self.get_tile(x, y) == EMPTY
+    def is_adjacent(self, x, y):
+        if self.index(x, y) == self.start:
+            return True
+        if x > 0 and not self.is_empty(x - 1, y):
+            return True
+        if y > 0 and not self.is_empty(x, y - 1):
+            return True
+        if x < self.width - 2 and not self.is_empty(x + 1, y):
+            return True
+        if y < self.height - 2 and not self.is_empty(x, y + 1):
+            return True
+        return False
     def do_move(self, move):
         x, y = move.x, move.y
         dx, dy = move.direction
@@ -211,7 +180,6 @@ class Board(object):
             x += dx
             y += dy
     def compute_move(self, dawg, x, y, direction, tiles):
-        # TODO: more validation
         mx, my = x, y
         dx, dy = direction
         px, py = PERPENDICULAR[direction]
@@ -221,6 +189,7 @@ class Board(object):
         multiplier = 1
         words = []
         placed = 0
+        adjacent = False
         
         # check for dangling tiles before word
         ax, ay = x - dx, y - dy
@@ -229,8 +198,9 @@ class Board(object):
         
         for tile in tiles:
             # check for board run off
-            if x >= self.width or y >= self.height:
+            if x < 0 or y < 0 or x >= self.width or y >= self.height:
                 return None
+            adjacent = adjacent or self.is_adjacent(x, y)
             index = self.index(x, y)
             if tile == SKIP:
                 tile = self.get_tile(x, y)
@@ -238,12 +208,12 @@ class Board(object):
                     return None
                 key, letter = key_letter(tile)
                 main_word.append(letter)
-                main_score += TILE_VALUE[key]
+                main_score += self.tile_value[key]
             else:
                 placed += 1
                 key, letter = key_letter(tile)
                 main_word.append(letter)
-                main_score += TILE_VALUE[key] * self.letter_multiplier[index]
+                main_score += self.tile_value[key] * self.letter_multiplier[index]
                 multiplier *= self.word_multiplier[index]
                 # check for perpendicular word
                 sub_word = [letter]
@@ -259,7 +229,7 @@ class Board(object):
                         break
                     key, letter = key_letter(tile)
                     sub_word.insert(0, letter)
-                    sub_score += TILE_VALUE[key]
+                    sub_score += self.tile_value[key]
                     n += 1
                 n = 1
                 while True: # suffix
@@ -272,7 +242,7 @@ class Board(object):
                         break
                     key, letter = key_letter(tile)
                     sub_word.append(letter)
-                    sub_score += TILE_VALUE[key]
+                    sub_score += self.tile_value[key]
                     n += 1
                 if len(sub_word) > 1:
                     sub_score *= self.word_multiplier[index]
@@ -284,6 +254,10 @@ class Board(object):
         
         # check for dangling tiles after word
         if x < self.width and y < self.height and self.get_tile(x, y) != EMPTY:
+            return None
+        
+        # check for placed tiles
+        if placed < 1 or placed > RACK_SIZE or not adjacent:
             return None
         
         # compute score
@@ -304,7 +278,7 @@ class Board(object):
 
 class Bag(object):
     def __init__(self):
-        self.tiles = ''.join(k * v for k, v in TILE_FREQUENCY.items())
+        self.tiles = list(''.join(k * v for k, v in TILE_FREQUENCY.items()))
     def pop(self):
         index = random.randint(0, len(self.tiles) - 1)
         return self.tiles.pop(index)
@@ -336,31 +310,16 @@ class Generator(object):
     def __init__(self, dawg, board):
         self.dawg = dawg
         self.board = board
-    def is_empty(self, x, y):
-        return self.board.get_tile(x, y) == EMPTY
-    def is_adjacent(self, x, y):
-        board = self.board
-        if board.index(x, y) == board.start:
-            return True
-        if x > 0 and not self.is_empty(x - 1, y):
-            return True
-        if y > 0 and not self.is_empty(x, y - 1):
-            return True
-        if x < board.width - 2 and not self.is_empty(x + 1, y):
-            return True
-        if y < board.height - 2 and not self.is_empty(x, y + 1):
-            return True
-        return False
     def get_horizontal_starts(self, tile_count):
         board = self.board
         result = [0] * (board.width * board.height)
         for y in xrange(board.height):
             for x in xrange(board.width):
-                if x > 0 and not self.is_empty(x - 1, y):
+                if x > 0 and not board.is_empty(x - 1, y):
                     continue
-                if self.is_empty(x, y):
+                if board.is_empty(x, y):
                     for i in xrange(tile_count):
-                        if x + i < board.width and self.is_adjacent(x + i, y):
+                        if x + i < board.width and board.is_adjacent(x + i, y):
                             result[board.index(x, y)] = i + 1
                             break
                 else:
@@ -371,11 +330,11 @@ class Generator(object):
         result = [0] * (board.width * board.height)
         for y in xrange(board.height):
             for x in xrange(board.width):
-                if y > 0 and not self.is_empty(x, y - 1):
+                if y > 0 and not board.is_empty(x, y - 1):
                     continue
-                if self.is_empty(x, y):
+                if board.is_empty(x, y):
                     for i in xrange(tile_count):
-                        if y + i < board.height and self.is_adjacent(x, y + i):
+                        if y + i < board.height and board.is_adjacent(x, y + i):
                             result[board.index(x, y)] = i + 1
                             break
                 else:
@@ -397,20 +356,23 @@ class Generator(object):
                             if tile in node:
                                 counts[WILD] -= 1
                                 tiles.append(tile.upper())
-                                self._generate(x + dx, y + dy, dx, dy, counts, node[tile], tiles, min_tiles, results)
+                                self._generate(x + dx, y + dy, dx, dy, counts, 
+                                    node[tile], tiles, min_tiles, results)
                                 tiles.pop()
                                 counts[WILD] += 1
                     else:
                         if tile in node:
                             counts[tile] -= 1
                             tiles.append(tile)
-                            self._generate(x + dx, y + dy, dx, dy, counts, node[tile], tiles, min_tiles, results)
+                            self._generate(x + dx, y + dy, dx, dy, counts, 
+                                node[tile], tiles, min_tiles, results)
                             tiles.pop()
                             counts[tile] += 1
         else:
             if tile in node:
                 tiles.append(SKIP)
-                self._generate(x + dx, y + dy, dx, dy, counts, node[tile], tiles, min_tiles, results)
+                self._generate(x + dx, y + dy, dx, dy, counts, node[tile], 
+                    tiles, min_tiles, results)
                 tiles.pop()
     def generate(self, tiles):
         moves = []
@@ -426,7 +388,8 @@ class Generator(object):
                 if min_tiles:
                     dx, dy = direction = HORIZONTAL
                     results = []
-                    self._generate(x, y, dx, dy, counts, dawg, [], min_tiles, results)
+                    self._generate(x, y, dx, dy, counts, dawg, [], 
+                        min_tiles, results)
                     for result in results:
                         move = board.compute_move(dawg, x, y, direction, result)
                         if move:
@@ -435,7 +398,8 @@ class Generator(object):
                 if min_tiles:
                     dx, dy = direction = VERTICAL
                     results = []
-                    self._generate(x, y, dx, dy, counts, dawg, [], min_tiles, results)
+                    self._generate(x, y, dx, dy, counts, dawg, [], 
+                        min_tiles, results)
                     for result in results:
                         move = board.compute_move(dawg, x, y, direction, result)
                         if move:
@@ -445,13 +409,26 @@ class Generator(object):
 if __name__ == '__main__':
     dawg = load_dawg('files/twl.dawg')
     board = Board()
-    x, y = 4, 7
-    for i, c in enumerate('testing'):
-        board.tiles[board.index(x + i, y)] = c
-    generator = Generator(dawg, board)
-    moves = generator.generate('qzx?tar')
-    moves.sort(key=operator.attrgetter('score'))
-    for move in moves:
-        print '%d,%d,%s %d %s %s' % (move.x, move.y, move.direction, move.score, move.tiles, move.words)
-    board.do_move(move)
-    print board
+    bag = Bag()
+    rack = Rack()
+    rack.fill(bag)
+    score = 0
+    while not bag.empty():
+        print ''.join(rack.tiles)
+        generator = Generator(dawg, board)
+        moves = generator.generate(rack.tiles)
+        moves.sort(key=operator.attrgetter('score'), reverse=True)
+        if not moves:
+            break
+        move = moves[0]
+        print move.x, move.y, move.score, move.tiles, move.words
+        board.do_move(move)
+        score += move.score
+        for tile in move.tiles:
+            if tile != SKIP:
+                key, letter = key_letter(tile)
+                rack.tiles.remove(key)
+        print board
+        print score
+        print
+        rack.fill(bag)
