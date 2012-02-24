@@ -74,15 +74,6 @@ TILE_VALUE = {
 }
 
 # Functions
-def key_letter(tile):
-    if tile.isupper():
-        key = WILD
-        letter = tile.lower()
-    else:
-        key = tile
-        letter = tile
-    return (key, letter)
-
 def load_dawg(path):
     with open(path, 'rb') as fp:
         data = fp.read()
@@ -115,6 +106,15 @@ def check_dawg(dawg, word):
             return False
     return True
 
+def key_letter(tile):
+    if tile.isupper():
+        key = WILD
+        letter = tile.lower()
+    else:
+        key = tile
+        letter = tile
+    return (key, letter)
+
 # Model Classes
 class Move(object):
     def __init__(self, x, y, direction, tiles, score, words):
@@ -124,6 +124,14 @@ class Move(object):
         self.tiles = tiles
         self.score = score
         self.words = words
+    @property
+    def vector(self):
+        row = '%02d' % (self.y + 1)
+        col = chr(ord('A') + self.x)
+        if self.direction == HORIZONTAL:
+            return row + col
+        else:
+            return col + row
 
 class Board(object):
     def __init__(self):
@@ -291,6 +299,8 @@ class Rack(object):
     def fill(self, bag):
         while len(self.tiles) < RACK_SIZE and not bag.empty():
             self.tiles.append(bag.pop())
+    def empty(self):
+        return not self.tiles
 
 class Player(object):
     def __init__(self, name):
@@ -413,7 +423,7 @@ if __name__ == '__main__':
     rack = Rack()
     rack.fill(bag)
     score = 0
-    while not bag.empty():
+    while not rack.empty():
         print ''.join(rack.tiles)
         generator = Generator(dawg, board)
         moves = generator.generate(rack.tiles)
@@ -421,14 +431,14 @@ if __name__ == '__main__':
         if not moves:
             break
         move = moves[0]
-        print move.x, move.y, move.score, move.tiles, move.words
+        print '%s "%s" [%s]' % (move.vector, move.tiles, ', '.join(move.words))
         board.do_move(move)
-        score += move.score
         for tile in move.tiles:
             if tile != SKIP:
                 key, letter = key_letter(tile)
                 rack.tiles.remove(key)
         print board
-        print score
+        print '%d + %d = %d' % (score, move.score, score + move.score)
         print
         rack.fill(bag)
+        score += move.score
