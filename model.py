@@ -64,7 +64,7 @@ TILE_FREQUENCY = {
     'a': 9, 'b': 2, 'c': 2, 'd': 4, 'e':12, 'f': 2, 'g': 3, 'h': 2,
     'i': 9, 'j': 1, 'k': 1, 'l': 4, 'm': 2, 'n': 6, 'o': 8, 'p': 2,
     'q': 1, 'r': 6, 's': 4, 't': 6, 'u': 4, 'v': 2, 'w': 2, 'x': 1,
-    'y': 2, 'z': 1, WILD: 0,
+    'y': 2, 'z': 1, WILD: 2,
 }
 
 TILE_VALUE = {
@@ -230,7 +230,7 @@ class Board(object):
                 multiplier *= self.word_multiplier[index]
                 # check for perpendicular word
                 sub_word = [letter]
-                sub_score = 0
+                sub_score = self.tile_value[key] * self.letter_multiplier[index]
                 n = 1
                 while True: # prefix
                     sx = x - px * n
@@ -443,7 +443,7 @@ if __name__ == '__main__':
     rack.fill(bag)
     score = 0
     while not rack.empty():
-        print ''.join(rack.tiles)
+        #print ''.join(rack.tiles)
         #moves = moves_python(dawg, board, rack.tiles)
         moves = moves_c(board, rack.tiles)
         moves.sort(key=lambda x:x.key)
@@ -454,7 +454,7 @@ if __name__ == '__main__':
         board.do_move(move)
         rack.do_move(move)
         rack.fill(bag)
-        print board
-        print '%d + %d = %d' % (score, move.score, score + move.score)
-        print
+        #print board
+        #print '%d + %d = %d' % (score, move.score, score + move.score)
+        #print
         score += move.score

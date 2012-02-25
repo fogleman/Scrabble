@@ -60,7 +60,7 @@ int checkDawg(DawgRecord* records, char* letters, int length) {
 
 
 
-#define MAX_RESULTS 1024
+#define MAX_RESULTS 4096
 #define RACK_SIZE 7
 #define BINGO 50
 #define HORIZONTAL 1
@@ -272,15 +272,15 @@ int computeMove(Board *board, int x, int y, int dx, int dy, Result *result, Move
 }
 
 int _generateMoves(Board *board, int x, int y, int dx, int dy, int *letterCounts, int wildCount, int minTiles, int dawgIndex, char *path, int pathIndex, Result *results, int resultIndex) {
+    if (resultIndex == MAX_RESULTS) {
+        return resultIndex;
+    }
     if (pathIndex >= minTiles) {
         int link = getDawgRecord(dawg, dawgIndex, SENTINEL);
         if (link != FAILED) {
             path[pathIndex] = '\0';
             strcpy(results[resultIndex++].tiles, path);
         }
-    }
-    if (resultIndex == MAX_RESULTS) {
-        return resultIndex;
     }
     if (x >= board->width || y >= board->height) {
         return resultIndex;
@@ -356,6 +356,9 @@ int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int max
                         move->direction = HORIZONTAL;
                         strcpy(move->tiles, result->tiles);
                         moveCount++;
+                        if (moveCount == maxMoves) {
+                            return moveCount;
+                        }
                     }
                 }
             }
@@ -371,6 +374,9 @@ int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int max
                         move->direction = VERTICAL;
                         strcpy(move->tiles, result->tiles);
                         moveCount++;
+                        if (moveCount == maxMoves) {
+                            return moveCount;
+                        }
                     }
                 }
             }
