@@ -97,14 +97,14 @@ def start(board, func):
     thread.start()
 
 def run(board, func):
-    dawg = model.load_dawg('files/twl.dawg')
+    import engine
+    engine.init('_engine.so', 'files/twl.dawg')
     bag = model.Bag()
     rack = model.Rack()
     rack.fill(bag)
     score = 0
     while not rack.empty():
-        generator = model.Generator(dawg, board)
-        moves = generator.generate(rack.tiles)
+        moves = engine.generate_moves(board, rack.tiles)
         moves.sort(key=operator.attrgetter('score'), reverse=True)
         if not moves:
             break
