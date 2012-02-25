@@ -385,8 +385,18 @@ int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int max
     return moveCount;
 }
 
-int main(int argc, char* argv[]) {
-    init("files/twl.dawg");
-    uninit();
-    return 0;
+void doMove(Board *board, Move *move) {
+    int x = move->x;
+    int y = move->y;
+    int dx = move->direction == HORIZONTAL ? 1 : 0;
+    int dy = move->direction == HORIZONTAL ? 0 : 1;
+    int length = strlen(move->tiles);
+    for (int i = 0; i < length; i++) {
+        char tile = move->tiles[i];
+        if (tile != SKIP) {
+            board->tiles[INDEX(board, x, y)] = tile;
+        }
+        x += dx;
+        y += dy;
+    }
 }

@@ -38,8 +38,7 @@ class Move(Structure):
         ('tiles', c_char * 16),
     ]
 
-def generate_moves(board, letters):
-    letters = ''.join(letters)
+def convert_board(board):
     b = Board()
     b.width = board.width
     b.height = board.height
@@ -60,11 +59,19 @@ def generate_moves(board, letters):
     for index, value in enumerate(board.tiles):
         tiles[index] = value
     b.tiles = tiles
+    return b
+
+def convert_move(move):
+    return model.Move(move.x, move.y, DIRECTIONS[move.direction], 
+        move.tiles, move.score, [])
+
+def generate_moves(board, letters):
+    board = convert_board(board)
+    letters = ''.join(letters)
     moves = (Move * MAX_MOVES)()
-    count = dll.generateMoves(byref(b), letters, len(letters), moves, MAX_MOVES)
+    count = dll.generateMoves(byref(board), letters, len(letters), moves, MAX_MOVES)
     result = []
     for i in xrange(count):
-        m = moves[i]
-        move = model.Move(m.x, m.y, DIRECTIONS[m.direction], m.tiles, m.score, [])
+        move = convert_move(moves[i])
         result.append(move)
     return result

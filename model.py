@@ -426,26 +426,15 @@ class Generator(object):
                             moves.append(move)
         return moves
 
-def moves_python(dawg, board, tiles):
-    generator = Generator(dawg, board)
-    return generator.generate(tiles)
-
-def moves_c(board, tiles):
-    return engine.generate_moves(board, tiles)
-
 if __name__ == '__main__':
-    random.seed(0)
     engine.init('_engine.so', 'files/twl.dawg')
-    #dawg = load_dawg('files/twl.dawg')
     board = Board()
     bag = Bag()
     rack = Rack()
     rack.fill(bag)
     score = 0
     while not rack.empty():
-        #print ''.join(rack.tiles)
-        #moves = moves_python(dawg, board, rack.tiles)
-        moves = moves_c(board, rack.tiles)
+        moves = engine.generate_moves(board, rack.tiles)
         moves.sort(key=lambda x:x.key)
         if not moves:
             break
@@ -454,7 +443,7 @@ if __name__ == '__main__':
         board.do_move(move)
         rack.do_move(move)
         rack.fill(bag)
-        #print board
-        #print '%d + %d = %d' % (score, move.score, score + move.score)
-        #print
         score += move.score
+    print
+    print board
+    print score
