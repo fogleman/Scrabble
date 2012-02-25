@@ -1,3 +1,4 @@
+import engine
 import operator
 import random
 import struct
@@ -63,7 +64,7 @@ TILE_FREQUENCY = {
     'a': 9, 'b': 2, 'c': 2, 'd': 4, 'e':12, 'f': 2, 'g': 3, 'h': 2,
     'i': 9, 'j': 1, 'k': 1, 'l': 4, 'm': 2, 'n': 6, 'o': 8, 'p': 2,
     'q': 1, 'r': 6, 's': 4, 't': 6, 'u': 4, 'v': 2, 'w': 2, 'x': 1,
-    'y': 2, 'z': 1, WILD: 2,
+    'y': 2, 'z': 1, WILD: 0,
 }
 
 TILE_VALUE = {
@@ -127,6 +128,9 @@ class Move(object):
     def __str__(self):
         words = ', '.join(self.words)
         return '%d %s "%s" [%s]' % (self.score, self.vector, self.tiles, words)
+    @property
+    def key(self):
+        return (-self.score, self.tiles)
     @property
     def vector(self):
         row = '%02d' % (self.y + 1)
@@ -422,8 +426,17 @@ class Generator(object):
                             moves.append(move)
         return moves
 
+def moves_python(dawg, board, tiles):
+    generator = Generator(dawg, board)
+    return generator.generate(tiles)
+
+def moves_c(board, tiles):
+    return engine.generate_moves(board, tiles)
+
 if __name__ == '__main__':
-    dawg = load_dawg('files/twl.dawg')
+    random.seed(0)
+    engine.init('_engine.so', 'files/twl.dawg')
+    #dawg = load_dawg('files/twl.dawg')
     board = Board()
     bag = Bag()
     rack = Rack()
@@ -431,9 +444,9 @@ if __name__ == '__main__':
     score = 0
     while not rack.empty():
         print ''.join(rack.tiles)
-        generator = Generator(dawg, board)
-        moves = generator.generate(rack.tiles)
-        moves.sort(key=operator.attrgetter('score'), reverse=True)
+        #moves = moves_python(dawg, board, rack.tiles)
+        moves = moves_c(board, rack.tiles)
+        moves.sort(key=lambda x:x.key)
         if not moves:
             break
         move = moves[0]
