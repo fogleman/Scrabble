@@ -7,12 +7,8 @@ except Exception:
     pass
 
 MAX_MOVES = 4096
-
-def load_dawg(path):
-    dll.init(path)
-
-def uninit():
-    dll.uninit()
+MAX_LENGTH = 16
+MAX_WORDS = 8
 
 class cBoard(Structure):
     _fields_ = [
@@ -31,8 +27,15 @@ class cMove(Structure):
         ('y', c_int),
         ('direction', c_int),
         ('score', c_int),
-        ('tiles', c_char * 16),
+        ('tiles', c_char * MAX_LENGTH),
+        ('words', c_char * (MAX_LENGTH * MAX_WORDS)),
     ]
+
+def load_dawg(path):
+    dll.init(path)
+
+def uninit():
+    dll.uninit()
 
 def convert_board(board):
     b = cBoard()
@@ -58,7 +61,9 @@ def convert_board(board):
     return b
 
 def convert_move(move):
-    return Move(move.x, move.y, move.direction, move.tiles, move.score, [])
+    words = move.words.split('\n')
+    words.insert(0, words.pop(-1))
+    return Move(move.x, move.y, move.direction, move.tiles, move.score, words)
 
 def generate_moves(board, letters):
     board = convert_board(board)

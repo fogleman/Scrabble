@@ -61,6 +61,8 @@ int checkDawg(DawgRecord *records, char *letters, int length) {
 
 
 #define MAX_RESULTS 4096
+#define MAX_LENGTH 16
+#define MAX_WORDS 8
 #define RACK_SIZE 7
 #define BINGO 50
 #define HORIZONTAL 1
@@ -92,11 +94,12 @@ typedef struct {
 	int y;
 	int direction;
 	int score;
-	char tiles[16];
+	char tiles[MAX_LENGTH];
+    char words[MAX_LENGTH * MAX_WORDS];
 } Move;
 
 typedef struct {
-    char tiles[16];
+    char tiles[MAX_LENGTH];
 } Result;
 
 int isAdjacent(Board *board, int x, int y) {
@@ -176,8 +179,9 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
     int multiplier = 1;
     int placed = 0;
     int adjacent = 0;
-    char mainWord[16];
+    char mainWord[MAX_LENGTH] = {0};
     int mainWordIndex = 0;
+    char words[MAX_LENGTH * MAX_WORDS] = {0};
 
     int ax = x - dx;
     int ay = y - dy;
@@ -210,7 +214,7 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
             multiplier *= board->wordMultiplier[index];
 
             int subScore = VALUE(board, tile) * board->letterMultiplier[index];
-            char subWord[16];
+            char subWord[MAX_LENGTH] = {0};
             int subWordIndex = 0;
             int sx = x - px;
             int sy = y - py;
@@ -239,6 +243,8 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
                 sy += py;
             }
             if (subWordIndex > 1) {
+                strcat(words, subWord);
+                strcat(words, "\n");
                 subWord[subWordIndex++] = SENTINEL;
                 if (!checkDawg(dawg, subWord, subWordIndex)) {
                     return 0;
@@ -259,6 +265,7 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
         return 0;
     }
 
+    strcat(words, mainWord);
     mainWord[mainWordIndex++] = SENTINEL;
     if (!checkDawg(dawg, mainWord, mainWordIndex)) {
         return 0;
@@ -270,6 +277,7 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
         score += BINGO;
     }
     move->score = score;
+    strcpy(move->words, words);
     return 1;
 }
 
@@ -353,7 +361,7 @@ int generateMoves(Board *board, char *tiles, int tileCount,
     for (int y = 0; y < board->height; y++) {
         for (int x = 0; x < board->width; x++) {
             int index = INDEX(board, x, y);
-            char path[16];
+            char path[MAX_LENGTH];
             int minTiles;
             minTiles = hstarts[index];
             if (minTiles) {

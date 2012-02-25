@@ -186,6 +186,7 @@ class Game(object):
             player.rack.fill(self.bag)
 
 if __name__ == '__main__':
+    import cEngine as engine
     board = Board()
     bag = Bag()
     rack = Rack()
