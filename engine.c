@@ -164,7 +164,8 @@ void getVerticalStarts(Board *board, int tileCount, int *result) {
 	}
 }
 
-int computeMove(Board *board, int x, int y, int dx, int dy, Result *result, Move *move) {
+int computeMove(Board *board, int x, int y, int dx, int dy, 
+    Result *result, Move *move) {
     int mx = x;
     int my = y;
     int px = !dx;
@@ -271,7 +272,9 @@ int computeMove(Board *board, int x, int y, int dx, int dy, Result *result, Move
     return 1;
 }
 
-int _generateMoves(Board *board, int x, int y, int dx, int dy, int *letterCounts, int wildCount, int minTiles, int dawgIndex, char *path, int pathIndex, Result *results, int resultIndex) {
+int _generateMoves(Board *board, int x, int y, int dx, int dy, 
+    int *letterCounts, int wildCount, int minTiles, int dawgIndex, 
+    char *path, int pathIndex, Result *results, int resultIndex) {
     if (resultIndex == MAX_RESULTS) {
         return resultIndex;
     }
@@ -297,13 +300,17 @@ int _generateMoves(Board *board, int x, int y, int dx, int dy, int *letterCounts
                     if (letterCounts[i]) {
                         letterCounts[i]--;
                         path[pathIndex] = tile;
-                        resultIndex = _generateMoves(board, x + dx, y + dy, dx, dy, letterCounts, wildCount, minTiles, link, path, pathIndex + 1, results, resultIndex);
+                        resultIndex = _generateMoves(board, x + dx, y + dy, 
+                            dx, dy, letterCounts, wildCount, minTiles, link, 
+                            path, pathIndex + 1, results, resultIndex);
                         letterCounts[i]++;
                     }
                     if (wildCount) {
                         wildCount--;
                         path[pathIndex] = UPPER(tile);
-                        resultIndex = _generateMoves(board, x + dx, y + dy, dx, dy, letterCounts, wildCount, minTiles, link, path, pathIndex + 1, results, resultIndex);
+                        resultIndex = _generateMoves(board, x + dx, y + dy, 
+                            dx, dy, letterCounts, wildCount, minTiles, link, 
+                            path, pathIndex + 1, results, resultIndex);
                         wildCount++;
                     }
                 }
@@ -315,13 +322,16 @@ int _generateMoves(Board *board, int x, int y, int dx, int dy, int *letterCounts
         if (link != FAILED) {
             link = DAWG_LINK(dawg[link]);
             path[pathIndex] = SKIP;
-            resultIndex = _generateMoves(board, x + dx, y + dy, dx, dy, letterCounts, wildCount, minTiles, link, path, pathIndex + 1, results, resultIndex);
+            resultIndex = _generateMoves(board, x + dx, y + dy, dx, dy, 
+                letterCounts, wildCount, minTiles, link, path, pathIndex + 1, 
+                results, resultIndex);
         }
     }
     return resultIndex;
 }
 
-int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int maxMoves) {
+int generateMoves(Board *board, char *tiles, int tileCount, 
+    Move *moves, int maxMoves) {
     int letterCounts[26] = {0};
     int wildCount = 0;
     for (int i = 0; i < tileCount; i++) {
@@ -346,7 +356,8 @@ int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int max
             int minTiles;
             minTiles = hstarts[index];
             if (minTiles) {
-                int resultIndex = _generateMoves(board, x, y, 1, 0, letterCounts, wildCount, minTiles, 0, path, 0, results, 0);
+                int resultIndex = _generateMoves(board, x, y, 1, 0, 
+                    letterCounts, wildCount, minTiles, 0, path, 0, results, 0);
                 for (int i = 0; i < resultIndex; i++) {
                     Result *result = results + i;
                     Move *move = moves + moveCount;
@@ -364,7 +375,8 @@ int generateMoves(Board *board, char *tiles, int tileCount, Move *moves, int max
             }
             minTiles = vstarts[index];
             if (minTiles) {
-                int resultIndex = _generateMoves(board, x, y, 0, 1, letterCounts, wildCount, minTiles, 0, path, 0, results, 0);
+                int resultIndex = _generateMoves(board, x, y, 0, 1, 
+                    letterCounts, wildCount, minTiles, 0, path, 0, results, 0);
                 for (int i = 0; i < resultIndex; i++) {
                     Result *result = results + i;
                     Move *move = moves + moveCount;
