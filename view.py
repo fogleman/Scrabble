@@ -104,8 +104,7 @@ def start(board, func):
     thread.start()
 
 def run(board, func):
-    import engine
-    engine.init('_engine.so', 'files/twl.dawg')
+    import cEngine as engine
     bag = model.Bag()
     rack = model.Rack()
     rack.fill(bag)

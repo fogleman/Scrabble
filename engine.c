@@ -11,28 +11,28 @@
 
 typedef unsigned int DawgRecord;
 
-DawgRecord* dawg;
+DawgRecord *dawg;
 
-char* loadFile(char* path) {
-    FILE* file = fopen(path, "rb");
+char *loadFile(char *path) {
+    FILE *file = fopen(path, "rb");
     fseek(file, 0, SEEK_END);
     int length = ftell(file);
     rewind(file);
-    char* buffer = (char*)malloc(length);
+    char *buffer = (char*)malloc(length);
     fread(buffer, 1, length, file);
     fclose(file);
     return buffer;
 }
 
-void init(char* dawgPath) {
-    dawg = (DawgRecord*)loadFile(dawgPath);
+void init(char *path) {
+    dawg = (DawgRecord *)loadFile(path);
 }
 
 void uninit() {
     free(dawg);
 }
 
-int getDawgRecord(DawgRecord* records, int index, char letter) {
+int getDawgRecord(DawgRecord *records, int index, char letter) {
     DawgRecord record;
     while (1) {
         record = records[index];
@@ -46,7 +46,7 @@ int getDawgRecord(DawgRecord* records, int index, char letter) {
     }
 }
 
-int checkDawg(DawgRecord* records, char* letters, int length) {
+int checkDawg(DawgRecord *records, char *letters, int length) {
     int index = 0;
     for (int i = 0; i < length; i++) {
         index = getDawgRecord(records, index, letters[i]);
@@ -68,6 +68,7 @@ int checkDawg(DawgRecord* records, char* letters, int length) {
 #define EMPTY '.'
 #define WILD '?'
 #define SKIP '-'
+
 #define INDEX(board, x, y) ((y) * board->width + (x))
 #define IS_EMPTY(board, x, y) (board->tiles[INDEX(board, (x), (y))] == EMPTY)
 #define IS_LOWER(c) ((c) >= 'a' && (c) <= 'z')

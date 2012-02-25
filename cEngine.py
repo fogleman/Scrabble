@@ -1,24 +1,20 @@
 from ctypes import *
-import model
+from model import Move
 
-DIRECTIONS = {
-    1: (1, 0),
-    2: (0, 1),
-}
+try:
+    dll = CDLL('_engine.so')
+except Exception:
+    pass
 
 MAX_MOVES = 4096
 
-dll = None
-
-def init(dll_path, dawg_path):
-    global dll
-    dll = CDLL(dll_path)
-    dll.init(dawg_path)
+def load_dawg(path):
+    dll.init(path)
 
 def uninit():
     dll.uninit()
 
-class Board(Structure):
+class cBoard(Structure):
     _fields_ = [
         ('width', c_int),
         ('height', c_int),
@@ -29,7 +25,7 @@ class Board(Structure):
         ('tiles', POINTER(c_char)),
     ]
 
-class Move(Structure):
+class cMove(Structure):
     _fields_ = [
         ('x', c_int),
         ('y', c_int),
@@ -39,7 +35,7 @@ class Move(Structure):
     ]
 
 def convert_board(board):
-    b = Board()
+    b = cBoard()
     b.width = board.width
     b.height = board.height
     b.start = board.start
@@ -62,16 +58,17 @@ def convert_board(board):
     return b
 
 def convert_move(move):
-    return model.Move(move.x, move.y, DIRECTIONS[move.direction], 
-        move.tiles, move.score, [])
+    return Move(move.x, move.y, move.direction, move.tiles, move.score, [])
 
 def generate_moves(board, letters):
     board = convert_board(board)
     letters = ''.join(letters)
-    moves = (Move * MAX_MOVES)()
+    moves = (cMove * MAX_MOVES)()
     count = dll.generateMoves(byref(board), letters, len(letters), moves, MAX_MOVES)
     result = []
     for i in xrange(count):
         move = convert_move(moves[i])
         result.append(move)
     return result
+
+load_dawg('files/twl.dawg')
