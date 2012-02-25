@@ -32,11 +32,16 @@ def make_font(face, size, bold=False, italic=False, underline=False):
 class Panel(wx.Panel):
     def __init__(self, parent):
         super(Panel, self).__init__(parent)
-        self.board = model.Board()
-        start(self.board, self.Refresh)
+        self.reset()
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+    def reset(self):
+        self.board = model.Board()
+        start(self.board, self.Refresh)
+    def on_left_down(self, event):
+        self.reset()
     def on_size(self, event):
         event.Skip()
         self.Refresh()
@@ -82,13 +87,15 @@ class Panel(wx.Panel):
                 dc.DrawLine(x + m, y, x + m, y + m)
                 dc.DrawLine(x, y + m, x + m, y + m)
                 if tile != model.EMPTY:
-                    key, letter = model.key_letter(tile)
-                    letter = letter.upper()
+                    letter = tile.upper()
                     tw, th = dc.GetTextExtent(letter)
                     tx, ty = x + n / 2 - tw / 2, y + n / 2 - th / 2
                     dc.SetTextForeground(wx.Colour(*adjust(r, g, b, 0.2)))
                     dc.DrawText(letter, tx - 1, ty - 1)
-                    dc.SetTextForeground(wx.WHITE)
+                    if tile.isupper():
+                        dc.SetTextForeground(wx.YELLOW)
+                    else:
+                        dc.SetTextForeground(wx.WHITE)
                     dc.DrawText(letter, tx, ty)
 
 def start(board, func):

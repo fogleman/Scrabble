@@ -109,10 +109,10 @@ int isAdjacent(Board *board, int x, int y) {
 	if (y > 0 && !IS_EMPTY(board, x, y - 1)) {
 		return 1;
 	}
-	if (x < board->width - 2 && !IS_EMPTY(board, x + 1, y)) {
+	if (x < board->width - 1 && !IS_EMPTY(board, x + 1, y)) {
 		return 1;
 	}
-	if (y < board->height - 2 && !IS_EMPTY(board, x, y + 1)) {
+	if (y < board->height - 1 && !IS_EMPTY(board, x, y + 1)) {
 		return 1;
 	}
 	return 0;
