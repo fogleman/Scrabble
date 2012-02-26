@@ -65,7 +65,7 @@ class Panel(wx.Panel):
         board = self.board
         n = size / board.width
         m = n - 1
-        dc.SetFont(make_font('Courier New', n * 3 / 5, True))
+        dc.SetFont(make_font('Arial', n * 3 / 5))
         for j in xrange(board.height):
             for i in xrange(board.width):
                 tile = board.get_tile(i, j)

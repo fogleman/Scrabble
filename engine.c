@@ -32,10 +32,10 @@ void uninit() {
     free(dawg);
 }
 
-int getDawgRecord(DawgRecord *records, int index, char letter) {
+int getDawgRecord(int index, char letter) {
     DawgRecord record;
     while (1) {
-        record = records[index];
+        record = dawg[index];
         if (DAWG_LETTER(record) == letter) {
             return index;
         }
@@ -46,14 +46,14 @@ int getDawgRecord(DawgRecord *records, int index, char letter) {
     }
 }
 
-int checkDawg(DawgRecord *records, char *letters, int length) {
+int checkDawg(char *letters, int length) {
     int index = 0;
     for (int i = 0; i < length; i++) {
-        index = getDawgRecord(records, index, letters[i]);
+        index = getDawgRecord(index, letters[i]);
         if (index == FAILED) {
             return 0;
         }
-        index = DAWG_LINK(records[index]);
+        index = DAWG_LINK(dawg[index]);
     }
     return 1;
 }
@@ -246,7 +246,7 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
                 strcat(words, subWord);
                 strcat(words, "\n");
                 subWord[subWordIndex++] = SENTINEL;
-                if (!checkDawg(dawg, subWord, subWordIndex)) {
+                if (!checkDawg(subWord, subWordIndex)) {
                     return 0;
                 }
                 subScore *= board->wordMultiplier[index];
@@ -267,7 +267,7 @@ int computeMove(Board *board, int x, int y, int dx, int dy,
 
     strcat(words, mainWord);
     mainWord[mainWordIndex++] = SENTINEL;
-    if (!checkDawg(dawg, mainWord, mainWordIndex)) {
+    if (!checkDawg(mainWord, mainWordIndex)) {
         return 0;
     }
 
@@ -288,7 +288,7 @@ int _generateMoves(Board *board, int x, int y, int dx, int dy,
         return resultIndex;
     }
     if (pathIndex >= minTiles) {
-        int link = getDawgRecord(dawg, dawgIndex, SENTINEL);
+        int link = getDawgRecord(dawgIndex, SENTINEL);
         if (link != FAILED) {
             path[pathIndex] = '\0';
             strcpy(results[resultIndex++].tiles, path);
@@ -303,7 +303,7 @@ int _generateMoves(Board *board, int x, int y, int dx, int dy,
         for (int i = 0; i < 26; i++) {
             if (letterCounts[i] || wildCount) {
                 tile = 'a' + i;
-                int link = getDawgRecord(dawg, dawgIndex, tile);
+                int link = getDawgRecord(dawgIndex, tile);
                 if (link != FAILED) {
                     link = DAWG_LINK(dawg[link]);
                     if (letterCounts[i]) {
@@ -327,7 +327,7 @@ int _generateMoves(Board *board, int x, int y, int dx, int dy,
         }
     }
     else {
-        int link = getDawgRecord(dawg, dawgIndex, LOWER(tile));
+        int link = getDawgRecord(dawgIndex, LOWER(tile));
         if (link != FAILED) {
             link = DAWG_LINK(dawg[link]);
             path[pathIndex] = SKIP;
